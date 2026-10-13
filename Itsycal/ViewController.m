@@ -574,6 +574,7 @@ static NSArray<NSString *> *ObservedDefaultsKeys(void)
 
     // Drop an image or text on the status item to add an event.
     __weak typeof(self) weakSelfForDrop = self;
+    [_dropTarget removeFromSuperview];
     _dropTarget = [[StatusItemDropTarget alloc] initWithStatusItem:_statusItem dropHandler:^BOOL(NSPasteboard *pboard) {
         return [weakSelfForDrop addCalendarEventFromPasteboard:pboard];
     }];

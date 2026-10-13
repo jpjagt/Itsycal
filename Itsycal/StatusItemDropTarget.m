@@ -8,28 +8,38 @@
 
 @implementation StatusItemDropTarget
 {
-    __weak NSStatusItem *_statusItem;
     BOOL (^_dropHandler)(NSPasteboard *);
 }
 
 - (instancetype)initWithStatusItem:(NSStatusItem *)statusItem dropHandler:(BOOL (^)(NSPasteboard *))dropHandler
 {
-    self = [super init];
+    NSStatusBarButton *button = statusItem.button;
+    self = [super initWithFrame:button.bounds];
     if (self) {
-        _statusItem = statusItem;
         _dropHandler = [dropHandler copy];
-        NSWindow *window = statusItem.button.window;
-        [window registerForDraggedTypes:[EventExtractor readablePasteboardTypes]];
-        window.delegate = self;
+        self.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+        [self registerForDraggedTypes:[EventExtractor readablePasteboardTypes]];
+        [button addSubview:self];
     }
     return self;
+}
+
+// Let the status item button handle clicks.
+- (void)mouseDown:(NSEvent *)event
+{
+    [self.superview mouseDown:event];
+}
+
+- (void)rightMouseDown:(NSEvent *)event
+{
+    [self.superview rightMouseDown:event];
 }
 
 - (void)setHovering:(BOOL)hovering
 {
     // The status item doesn't highlight (see -createStatusItem),
     // so dim it to show it will accept the drop.
-    _statusItem.button.alphaValue = hovering ? 0.5 : 1;
+    self.superview.alphaValue = hovering ? 0.5 : 1;
 }
 
 - (NSDragOperation)draggingEntered:(id<NSDraggingInfo>)sender
@@ -54,7 +64,9 @@
 - (BOOL)performDragOperation:(id<NSDraggingInfo>)sender
 {
     [self setHovering:NO];
-    return _dropHandler(sender.draggingPasteboard);
+    if (_dropHandler(sender.draggingPasteboard)) return YES;
+    NSBeep();
+    return NO;
 }
 
 @end

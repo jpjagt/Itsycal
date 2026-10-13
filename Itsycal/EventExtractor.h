@@ -22,7 +22,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef void (^EventExtractorCompletion)(EventDraft *draft);
+// draft is nil if the content couldn't be read at all.
+typedef void (^EventExtractorCompletion)(EventDraft * _Nullable draft);
 
 // NSUserDefaults key for the TypeSafe API key. If unset, the
 // TYPESAFE_API_KEY environment variable is used.

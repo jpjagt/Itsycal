@@ -434,9 +434,18 @@ const NSTimeInterval kAlertRegularRelativeOffsets[kAlertRegularNumOffsets] = {
 - (void)applyDraft:(EventDraft *)draft
 {
     _title.enabled = YES;
-    _title.placeholderString = draft.recognized
-        ? NSLocalizedString(@"New Event", @"")
-        : NSLocalizedString(@"No event found", @"");
+    if (draft.recognized) {
+        _title.placeholderString = NSLocalizedString(@"New Event", @"");
+    }
+    else if (!draft) {
+        _title.placeholderString = NSLocalizedString(@"Couldn't read that", @"");
+    }
+    else if (![draft.sourceText stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]].length) {
+        _title.placeholderString = NSLocalizedString(@"No text found", @"");
+    }
+    else {
+        _title.placeholderString = NSLocalizedString(@"No event found", @"");
+    }
     [self.view.window makeFirstResponder:_title];
     if (!draft.recognized) return;
 

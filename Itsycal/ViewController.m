@@ -343,7 +343,7 @@ static NSArray<NSString *> *ObservedDefaultsKeys(void)
     BOOL readable = [EventExtractor extractFromPasteboard:pboard completion:^(EventDraft *draft) {
         [weakEventVC applyDraft:draft];
     }];
-    if (!readable) [eventVC applyDraft:[EventDraft new]];
+    if (!readable) [eventVC applyDraft:nil];
     return readable;
 }
 

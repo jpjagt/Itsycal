@@ -393,12 +393,18 @@ static NSString *TextFromFile(NSURL *url)
     return nil;
 }
 
+// Reads a dropped file: an image to OCR, or text. NO if neither.
+static BOOL ExtractFromFile(NSURL *url, EventExtractorCompletion completion);
+
 @implementation EventExtractor
 
 + (NSArray<NSPasteboardType> *)readablePasteboardTypes
 {
     NSMutableArray *types = [[NSImage imageTypes] mutableCopy];
     [types addObjectsFromArray:@[NSPasteboardTypeFileURL, NSPasteboardTypeString]];
+    // Some drags (e.g. the screenshot thumbnail) promise a file
+    // instead of providing image data or a file URL.
+    [types addObjectsFromArray:NSFilePromiseReceiver.readableDraggedTypes];
     return types;
 }
 
@@ -406,6 +412,7 @@ static NSString *TextFromFile(NSURL *url)
 {
     if ([NSImage canInitWithPasteboard:pboard]) return YES;
     if ([pboard canReadObjectForClasses:@[[NSString class]] options:nil]) return YES;
+    if ([pboard canReadObjectForClasses:@[[NSFilePromiseReceiver class]] options:nil]) return YES;
     // A file URL that isn't an image: only text files are readable,
     // but checking that means reading it. Accept and check on drop.
     return [pboard canReadObjectForClasses:@[[NSURL class]] options:@{NSPasteboardURLReadingFileURLsOnlyKey: @YES}];
@@ -413,18 +420,16 @@ static NSString *TextFromFile(NSURL *url)
 
 + (BOOL)extractFromPasteboard:(NSPasteboard *)pboard completion:(EventExtractorCompletion)completion
 {
-    // Text files and clippings dragged from Finder.
+    os_log(OS_LOG_DEFAULT, "EventExtractor: pasteboard types %{public}@", pboard.types);
+
+    // Files dragged from Finder: images and text files/clippings.
     NSArray<NSURL *> *urls = [pboard readObjectsForClasses:@[[NSURL class]] options:@{NSPasteboardURLReadingFileURLsOnlyKey: @YES}];
     for (NSURL *url in urls) {
-        NSString *text = TextFromFile(url);
-        if (text.length) {
-            [self extractFromText:text completion:completion];
-            return YES;
-        }
+        if (ExtractFromFile(url, completion)) return YES;
     }
-    // Images (screenshots, image files, images from a browser).
-    // Prefer an image to text: a browser image drag also carries
-    // its URL as a string.
+    // Image data (screenshots, images from a browser). Prefer an
+    // image to text: a browser image drag also carries its URL
+    // as a string.
     NSImage *image = [[pboard readObjectsForClasses:@[[NSImage class]] options:nil] firstObject];
     if (image) {
         [self extractFromImage:image completion:completion];
@@ -433,6 +438,23 @@ static NSString *TextFromFile(NSURL *url)
     NSString *text = [[pboard readObjectsForClasses:@[[NSString class]] options:nil] firstObject];
     if (text.length) {
         [self extractFromText:text completion:completion];
+        return YES;
+    }
+    // Promised files: ask the source to write them, then read.
+    NSFilePromiseReceiver *receiver = [[pboard readObjectsForClasses:@[[NSFilePromiseReceiver class]] options:nil] firstObject];
+    if (receiver) {
+        NSURL *dir = [NSFileManager.defaultManager.temporaryDirectory URLByAppendingPathComponent:NSUUID.UUID.UUIDString];
+        [NSFileManager.defaultManager createDirectoryAtURL:dir withIntermediateDirectories:YES attributes:nil error:NULL];
+        __block BOOL handled = NO;
+        [receiver receivePromisedFilesAtDestination:dir options:@{} operationQueue:[NSOperationQueue new] reader:^(NSURL *fileURL, NSError *error) {
+            // Called once per promised file; use the first readable one.
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (handled) return;
+                if (error) os_log_error(OS_LOG_DEFAULT, "EventExtractor: file promise failed: %{public}@", error);
+                handled = !error && ExtractFromFile(fileURL, completion);
+                if (!handled) completion(nil);
+            });
+        }];
         return YES;
     }
     return NO;
@@ -466,3 +488,21 @@ static NSString *TextFromFile(NSURL *url)
 }
 
 @end
+
+static BOOL ExtractFromFile(NSURL *url, EventExtractorCompletion completion)
+{
+    NSString *text = TextFromFile(url);
+    if (text.length) {
+        [EventExtractor extractFromText:text completion:completion];
+        return YES;
+    }
+    UTType *type = [UTType typeWithFilenameExtension:url.pathExtension];
+    if (type && [type conformsToType:UTTypeImage]) {
+        NSImage *image = [[NSImage alloc] initWithContentsOfURL:url];
+        if (image) {
+            [EventExtractor extractFromImage:image completion:completion];
+            return YES;
+        }
+    }
+    return NO;
+}

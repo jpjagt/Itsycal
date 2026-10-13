@@ -18,8 +18,9 @@
 @property (nonatomic) NSDate *calSelectedDate;
 
 // Show that an event is being read from dropped or pasted
-// content, then prefill the form with what was found.
+// content, then prefill the form with what was found. A nil
+// draft means the content couldn't be read.
 - (void)showReadingDraft;
-- (void)applyDraft:(EventDraft *)draft;
+- (void)applyDraft:(nullable EventDraft *)draft;
 
 @end

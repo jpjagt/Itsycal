@@ -427,13 +427,13 @@ const NSTimeInterval kAlertRegularRelativeOffsets[kAlertRegularNumOffsets] = {
 
 - (void)showReadingDraft
 {
+    // Only change the placeholder: don't disable the title field.
+    // It's the first responder, and disabling it makes it resign.
     _title.placeholderString = NSLocalizedString(@"Reading…", @"");
-    _title.enabled = NO;
 }
 
 - (void)applyDraft:(EventDraft *)draft
 {
-    _title.enabled = YES;
     if (draft.recognized) {
         _title.placeholderString = NSLocalizedString(@"New Event", @"");
     }
@@ -446,7 +446,6 @@ const NSTimeInterval kAlertRegularRelativeOffsets[kAlertRegularNumOffsets] = {
     else {
         _title.placeholderString = NSLocalizedString(@"No event found", @"");
     }
-    [self.view.window makeFirstResponder:_title];
     if (!draft.recognized) return;
 
     if (draft.title)    _title.stringValue = draft.title;

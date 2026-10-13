@@ -341,6 +341,7 @@ static NSArray<NSString *> *ObservedDefaultsKeys(void)
     [eventVC showReadingDraft];
     __weak EventViewController *weakEventVC = eventVC;
     BOOL readable = [EventExtractor extractFromPasteboard:pboard completion:^(EventDraft *draft) {
+        os_log(OS_LOG_DEFAULT, "EventExtractor: applying draft to %{public}@", weakEventVC ?: @"closed popover");
         [weakEventVC applyDraft:draft];
     }];
     if (!readable) [eventVC applyDraft:nil];

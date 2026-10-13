@@ -15,6 +15,8 @@
 #import "DatePickerVC.h"
 #import "SBCalendar.h"
 #import "EventViewController.h"
+#import "EventExtractor.h"
+#import "StatusItemDropTarget.h"
 #import "PrefsVC.h"
 #import "PrefsGeneralVC.h"
 #import "PrefsAppearanceVC.h"
@@ -57,6 +59,7 @@ static NSArray<NSString *> *ObservedDefaultsKeys(void)
     NSRect     _fallbackAnchor;
     BOOL       _usesFallbackPosition;
     NSPopover *_newEventPopover;
+    StatusItemDropTarget *_dropTarget;
     NSMutableArray *_notificationTokens;
 }
 
@@ -251,7 +254,13 @@ static NSArray<NSString *> *ObservedDefaultsKeys(void)
         //  already open, we close it and return.
         if (sender != _moCal) return;
     }
-    
+    [self presentNewEventPopover];
+}
+
+// Opens the New Event popover after checking that Itsycal can
+// add events. Returns its view controller, or nil if it can't.
+- (EventViewController *)presentNewEventPopover
+{
     [[NSApplication sharedApplication] activateIgnoringOtherApps:YES];
     
     if (_ec.calendarAccessGranted == NO) {
@@ -259,7 +268,7 @@ static NSArray<NSString *> *ObservedDefaultsKeys(void)
         alert.messageText = NSLocalizedString(@"Calendar access was denied.", @"");
         alert.informativeText = NSLocalizedString(@"Itsycal is more useful when you allow it to add events to your calendars. You can change this setting in System Settings › Privacy & Security › Calendars.", @"");
         [alert runModal];
-        return;
+        return nil;
     }
     
     // Confirm that there are calendars which can be modified.
@@ -276,7 +285,7 @@ static NSArray<NSString *> *ObservedDefaultsKeys(void)
         alert.messageText = NSLocalizedString(@"There are no modifiable calendars.", @"");
         alert.informativeText = NSLocalizedString(@"Itsycal cannot create a new event unless there is at least one calendar you have permission to modify.", @"");
         [alert runModal];
-        return;
+        return nil;
     }
 
     if (!_newEventPopover) {
@@ -296,6 +305,38 @@ static NSArray<NSString *> *ObservedDefaultsKeys(void)
     
     _newEventPopover.contentViewController = eventVC;
     [_newEventPopover showRelativeToRect:_btnAdd.bounds ofView:_btnAdd preferredEdge:NSRectEdgeMinX];
+    return eventVC;
+}
+
+// Image, text, or text clipping dropped on the menubar icon or
+// pasted: open the New Event popover prefilled with the event
+// found in it, for the user to confirm.
+- (BOOL)addCalendarEventFromPasteboard:(NSPasteboard *)pboard
+{
+    if (![EventExtractor canReadPasteboard:pboard]) return NO;
+    if (!([self.itsycalWindow occlusionState] & NSWindowOcclusionStateVisible)) {
+        [self showItsycalWindow];
+    }
+    [_newEventPopover close];
+    EventViewController *eventVC = [self presentNewEventPopover];
+    if (!eventVC) return NO;
+    [eventVC showReadingDraft];
+    __weak EventViewController *weakEventVC = eventVC;
+    BOOL readable = [EventExtractor extractFromPasteboard:pboard completion:^(EventDraft *draft) {
+        [weakEventVC applyDraft:draft];
+    }];
+    if (!readable) [eventVC applyDraft:[EventDraft new]];
+    return readable;
+}
+
+- (void)paste:(id)sender
+{
+    if (![self addCalendarEventFromPasteboard:[NSPasteboard generalPasteboard]]) NSBeep();
+}
+
+- (void)addCalendarEventFromClipboard:(id)sender
+{
+    [self paste:sender];
 }
 
 - (void)showCalendarApp:(id)sender
@@ -505,6 +546,12 @@ static NSArray<NSString *> *ObservedDefaultsKeys(void)
     [self updateMenubarIcon];
     [self positionItsycalWindowForInitialPresentation:NO];
 
+    // Drop an image or text on the status item to add an event.
+    __weak typeof(self) weakSelfForDrop = self;
+    _dropTarget = [[StatusItemDropTarget alloc] initWithStatusItem:_statusItem dropHandler:^BOOL(NSPasteboard *pboard) {
+        return [weakSelfForDrop addCalendarEventFromPasteboard:pboard];
+    }];
+
     // Notification for when status item view moves
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(statusItemMoved:) name:NSWindowDidMoveNotification object:_statusItem.button.window];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(statusItemMoved:) name:NSWindowDidResizeNotification object:_statusItem.button.window];
@@ -528,8 +575,13 @@ static NSArray<NSString *> *ObservedDefaultsKeys(void)
 {
     NSMenu *menu = [[NSMenu alloc] init];
     menu.delegate = self;
+    menu.autoenablesItems = NO;
 
-    NSMenuItem *item = [menu addItemWithTitle:NSLocalizedString(@"Settings…", @"") action:@selector(showPrefs:) keyEquivalent:@""];
+    NSMenuItem *item = [menu addItemWithTitle:NSLocalizedString(@"New Event from Clipboard", @"") action:@selector(addCalendarEventFromClipboard:) keyEquivalent:@""];
+    item.target = self;
+    item.enabled = [EventExtractor canReadPasteboard:[NSPasteboard generalPasteboard]];
+    [menu addItem:[NSMenuItem separatorItem]];
+    item = [menu addItemWithTitle:NSLocalizedString(@"Settings…", @"") action:@selector(showPrefs:) keyEquivalent:@""];
     item.target = self;
     item = [menu addItemWithTitle:NSLocalizedString(@"Date & Time…", @"") action:@selector(openDateAndTimePrefs:) keyEquivalent:@""];
     item.target = self;

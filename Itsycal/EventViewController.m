@@ -8,6 +8,7 @@
 
 #import "EventViewController.h"
 #import "EventCenter.h"
+#import "EventDraft.h"
 #import "MoThemeView.h"
 #import "MoVFLHelper.h"
 #import "NSMenuItem+NoImages.h"
@@ -422,6 +423,42 @@ const NSTimeInterval kAlertRegularRelativeOffsets[kAlertRegularNumOffsets] = {
     backgroundColorView.borderWidth = 0;
     backgroundColorView.fillColor = Theme.mainBackgroundColor;
     [frameView addSubview:backgroundColorView positioned:NSWindowBelow relativeTo:nil];
+}
+
+- (void)showReadingDraft
+{
+    _title.placeholderString = NSLocalizedString(@"Reading…", @"");
+    _title.enabled = NO;
+}
+
+- (void)applyDraft:(EventDraft *)draft
+{
+    _title.enabled = YES;
+    _title.placeholderString = draft.recognized
+        ? NSLocalizedString(@"New Event", @"")
+        : NSLocalizedString(@"No event found", @"");
+    [self.view.window makeFirstResponder:_title];
+    if (!draft.recognized) return;
+
+    if (draft.title)    _title.stringValue = draft.title;
+    if (draft.location) _location.stringValue = draft.location;
+    if (draft.url)      _url.stringValue = draft.url;
+
+    if (draft.startDate) {
+        _allDayCheckbox.state = draft.allDay ? NSControlStateValueOn : NSControlStateValueOff;
+        [self allDayClicked:_allDayCheckbox];
+        // Sets _endDate to the default duration after the start.
+        _startDate.dateValue = draft.startDate;
+        [self startDateChanged:_startDate];
+        if (draft.allDay) {
+            _endDate.dateValue = draft.endDate ?: draft.startDate;
+        }
+        else if (draft.endDate) {
+            _endDate.dateValue = draft.endDate;
+        }
+        _repEndDate.dateValue = _endDate.dateValue;
+    }
+    [self controlTextDidChange:[NSNotification notificationWithName:NSControlTextDidChangeNotification object:_title]];
 }
 
 - (NSInteger)defaultDurationInMinutesForNewEvent {

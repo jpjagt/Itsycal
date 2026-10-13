@@ -43,6 +43,9 @@
 		9261BAB02F74A801000773A6 /* NSMenuItem+NoImages.m in Sources */ = {isa = PBXBuildFile; fileRef = 9261BAAF2F74A801000773A6 /* NSMenuItem+NoImages.m */; };
 		9261EB301EEF447500DCFFC4 /* Themer.m in Sources */ = {isa = PBXBuildFile; fileRef = 9261EB2F1EEF447500DCFFC4 /* Themer.m */; };
 		92658E621A9DBD8E002AE86C /* EventViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 92658E611A9DBD8E002AE86C /* EventViewController.m */; };
+		D0D0D0D0D0D0D0D0D0D00003 /* EventDraft.m in Sources */ = {isa = PBXBuildFile; fileRef = D0D0D0D0D0D0D0D0D0D00002 /* EventDraft.m */; };
+		D0D0D0D0D0D0D0D0D0D00006 /* EventExtractor.m in Sources */ = {isa = PBXBuildFile; fileRef = D0D0D0D0D0D0D0D0D0D00005 /* EventExtractor.m */; };
+		D0D0D0D0D0D0D0D0D0D00009 /* StatusItemDropTarget.m in Sources */ = {isa = PBXBuildFile; fileRef = D0D0D0D0D0D0D0D0D0D00008 /* StatusItemDropTarget.m */; };
 		926A6D8F1E3EC89100AAA991 /* PrefsVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 926A6D8E1E3EC89100AAA991 /* PrefsVC.m */; };
 		9276916027E17C74007E7978 /* beep.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 9276915F27E17C74007E7978 /* beep.mp3 */; };
 		9278CADB1A990462004B6BB9 /* MoTableView.m in Sources */ = {isa = PBXBuildFile; fileRef = 9278CADA1A990462004B6BB9 /* MoTableView.m */; };
@@ -155,6 +158,12 @@
 		9261EB2F1EEF447500DCFFC4 /* Themer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Themer.m; sourceTree = "<group>"; };
 		92658E601A9DBD8E002AE86C /* EventViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EventViewController.h; sourceTree = "<group>"; };
 		92658E611A9DBD8E002AE86C /* EventViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EventViewController.m; sourceTree = "<group>"; };
+		D0D0D0D0D0D0D0D0D0D00001 /* EventDraft.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EventDraft.h; sourceTree = "<group>"; };
+		D0D0D0D0D0D0D0D0D0D00002 /* EventDraft.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EventDraft.m; sourceTree = "<group>"; };
+		D0D0D0D0D0D0D0D0D0D00004 /* EventExtractor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EventExtractor.h; sourceTree = "<group>"; };
+		D0D0D0D0D0D0D0D0D0D00005 /* EventExtractor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EventExtractor.m; sourceTree = "<group>"; };
+		D0D0D0D0D0D0D0D0D0D00007 /* StatusItemDropTarget.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StatusItemDropTarget.h; sourceTree = "<group>"; };
+		D0D0D0D0D0D0D0D0D0D00008 /* StatusItemDropTarget.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StatusItemDropTarget.m; sourceTree = "<group>"; };
 		926A6D8D1E3EC89100AAA991 /* PrefsVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PrefsVC.h; sourceTree = "<group>"; };
 		926A6D8E1E3EC89100AAA991 /* PrefsVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PrefsVC.m; sourceTree = "<group>"; };
 		9276915F27E17C74007E7978 /* beep.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = beep.mp3; sourceTree = "<group>"; };
@@ -268,6 +277,12 @@
 				925B471A1A93CD2A00E0329A /* TooltipViewController.m */,
 				92658E601A9DBD8E002AE86C /* EventViewController.h */,
 				92658E611A9DBD8E002AE86C /* EventViewController.m */,
+				D0D0D0D0D0D0D0D0D0D00001 /* EventDraft.h */,
+				D0D0D0D0D0D0D0D0D0D00002 /* EventDraft.m */,
+				D0D0D0D0D0D0D0D0D0D00004 /* EventExtractor.h */,
+				D0D0D0D0D0D0D0D0D0D00005 /* EventExtractor.m */,
+				D0D0D0D0D0D0D0D0D0D00007 /* StatusItemDropTarget.h */,
+				D0D0D0D0D0D0D0D0D0D00008 /* StatusItemDropTarget.m */,
 				9261EB2E1EEF447500DCFFC4 /* Themer.h */,
 				9261EB2F1EEF447500DCFFC4 /* Themer.m */,
 				92B28CCD210BD17500485AE2 /* Sizer.h */,
@@ -442,6 +457,9 @@
 				920D6D51266A83AC00498E19 /* MoLoginItem.m in Sources */,
 				9242A5921A82A40B005AA4B3 /* MoCalGrid.m in Sources */,
 				92658E621A9DBD8E002AE86C /* EventViewController.m in Sources */,
+				D0D0D0D0D0D0D0D0D0D00003 /* EventDraft.m in Sources */,
+				D0D0D0D0D0D0D0D0D0D00006 /* EventExtractor.m in Sources */,
+				D0D0D0D0D0D0D0D0D0D00009 /* StatusItemDropTarget.m in Sources */,
 				922232CD1A8DF672003BFAD9 /* EventCenter.m in Sources */,
 				920B5D7C2B4D10B6004A10D3 /* DatePickerVC.m in Sources */,
 				926A6D8F1E3EC89100AAA991 /* PrefsVC.m in Sources */,
